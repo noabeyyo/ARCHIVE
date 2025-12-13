@@ -75,26 +75,16 @@ let files = [
 ];
 
 
+
 // ================= GLOBALS =================
-let imgs = [];
 let placed = [];
+let angleX = 0, angleY = 0;
+let targetX = 0, targetY = 0;
 
-let angleX = 0;
-let angleY = 0;
-let targetX = 0;
-let targetY = 0;
-
-// zoom
 let cameraZ = 0;
 let targetZ = -800;
 let zoomSpeed = 0.15;
 
-// loading control
-let loadIndex = 0;
-let INITIAL_LOAD = 12;
-let LOAD_INTERVAL = 10;
-
-// colors
 let palette = [
   "#A78F06", "#F9A47A",
   "#BB8CFE", "#FA7800",
@@ -102,50 +92,35 @@ let palette = [
   "#6BAADF"
 ];
 
+// loading
+let loadIndex = 0;
+let LOAD_INTERVAL = 8;
+let START_LOADING_AFTER = 5000;
+let startTime;
+
 // front group
 let frontIndices = [];
 let frontCount = 25;
 let lastFrontChange = 0;
 let frontChangeInterval = 1000;
 
-// ================= PRELOAD =================
-function preload() {
-  for (let i = 0; i < INITIAL_LOAD; i++) {
-    loadNextImage();
-  }
-}
-
 // ================= SETUP =================
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   noStroke();
+  startTime = millis();
+
+  // create placeholders immediately
+  for (let i = 0; i < files.length; i++) {
+    createPlaceholder();
+  }
 }
 
-// ================= IMAGE LOADING =================
-function loadNextImage() {
-  if (loadIndex >= files.length) return;
-
-  const file = files[loadIndex];
-  loadIndex++; // ⬅️ קידום מיידי – לפני הטעינה
-
-  loadImage(
-    file,
-    img => {
-      imgs.push(img);
-      createPlacedForImage(img);
-    },
-    err => {
-      console.warn("Failed loading:", file);
-    }
-  );
-}
-
-
-function createPlacedForImage(img) {
+// ================= PLACEHOLDERS =================
+function createPlaceholder() {
   let radius = 2400;
   let minDistance = 650;
   let attempts = 300;
-
   let pos = null;
 
   for (let i = 0; i < attempts; i++) {
@@ -180,8 +155,7 @@ function createPlacedForImage(img) {
   }
 
   let w = 220;
-  let aspect = img.width / img.height;
-  let h = w / aspect;
+  let h = w / random(0.7, 1.4);
 
   placed.push({
     x: pos.x,
@@ -189,7 +163,7 @@ function createPlacedForImage(img) {
     z: pos.z,
     w,
     h,
-    img,
+    img: null,
     color: color(random(palette)),
     alpha: 0,
     bgAlpha: 255,
@@ -201,12 +175,28 @@ function createPlacedForImage(img) {
   }
 }
 
+// ================= IMAGE LOADING =================
+function loadNextImage() {
+  if (loadIndex >= files.length) return;
+
+  const index = loadIndex;
+  const file = files[index];
+  loadIndex++;
+
+  loadImage(file, img => {
+    placed[index].img = img;
+  });
+}
+
 // ================= DRAW =================
 function draw() {
   background("#C3C3C3");
 
-  // gradual loading
-  if (frameCount % LOAD_INTERVAL === 0) {
+  // start loading AFTER delay
+  if (
+    millis() - startTime > START_LOADING_AFTER &&
+    frameCount % LOAD_INTERVAL === 0
+  ) {
     loadNextImage();
   }
 
@@ -222,7 +212,7 @@ function draw() {
   rotateX(angleX * speed * 300);
   rotateY(angleY * speed * 300);
 
-  if (millis() - lastFrontChange > frontChangeInterval && placed.length > frontCount) {
+  if (millis() - lastFrontChange > frontChangeInterval) {
     let removeIdx = floor(random(frontIndices.length));
     let newIdx;
     do {
@@ -248,20 +238,20 @@ function draw() {
     scale(scaleFactor);
 
     let isFront = frontIndices.includes(i);
-    p.alpha = lerp(p.alpha, isFront ? 255 : 0, 0.12);
-    p.bgAlpha = lerp(p.bgAlpha, isFront ? 0 : 255, 0.12);
+    p.alpha = lerp(p.alpha, isFront && p.img ? 255 : 0, 0.12);
+    p.bgAlpha = lerp(p.bgAlpha, p.img ? 0 : 255, 0.12);
 
-    push();
-    fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
-    plane(p.w, p.h);
-    pop();
+    // placeholder
+    if (p.bgAlpha > 2) {
+      fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
+      plane(p.w, p.h);
+    }
 
-    if (p.alpha > 2) {
-      push();
+    // image
+    if (p.img && p.alpha > 2) {
       tint(255, p.alpha);
       texture(p.img);
       plane(p.w, p.h);
-      pop();
     }
 
     pop();
