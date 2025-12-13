@@ -125,12 +125,21 @@ function setup() {
 function loadNextImage() {
   if (loadIndex >= files.length) return;
 
-  loadImage(files[loadIndex], img => {
-    imgs.push(img);
-    createPlacedForImage(img);
-    loadIndex++;
-  });
+  const file = files[loadIndex];
+  loadIndex++; // ⬅️ קידום מיידי – לפני הטעינה
+
+  loadImage(
+    file,
+    img => {
+      imgs.push(img);
+      createPlacedForImage(img);
+    },
+    err => {
+      console.warn("Failed loading:", file);
+    }
+  );
 }
+
 
 function createPlacedForImage(img) {
   let radius = 2400;
