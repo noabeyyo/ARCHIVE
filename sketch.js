@@ -74,8 +74,6 @@ let files = [
   "https://static.wixstatic.com/media/517ef0_333feb6b63a241869ffe7fd4ef440350~mv2.jpg"
 ];
 
-
-
 // ================= GLOBALS =================
 let placed = [];
 let angleX = 0, angleY = 0;
@@ -110,13 +108,12 @@ function setup() {
   noStroke();
   startTime = millis();
 
-  // create placeholders immediately
   for (let i = 0; i < files.length; i++) {
     createPlaceholder();
   }
 }
 
-// ================= PLACEHOLDERS =================
+// ================= PLACEHOLDER =================
 function createPlaceholder() {
   let radius = 2400;
   let minDistance = 650;
@@ -139,23 +136,14 @@ function createPlaceholder() {
         break;
       }
     }
-
     if (ok) {
       pos = createVector(x, y, z);
       break;
     }
   }
 
-  if (!pos) {
-    pos = createVector(
-      random(-radius, radius),
-      random(-radius, radius),
-      random(-radius, radius)
-    );
-  }
-
   let w = 220;
-  let h = w / random(0.7, 1.4);
+  let h = 220; // זמני – יתעדכן כשהתמונה תיטען
 
   placed.push({
     x: pos.x,
@@ -179,12 +167,15 @@ function createPlaceholder() {
 function loadNextImage() {
   if (loadIndex >= files.length) return;
 
-  const index = loadIndex;
-  const file = files[index];
+  const i = loadIndex;
   loadIndex++;
 
-  loadImage(file, img => {
-    placed[index].img = img;
+  loadImage(files[i], img => {
+    let p = placed[i];
+    p.img = img;
+
+    let aspect = img.width / img.height;
+    p.h = p.w / aspect;
   });
 }
 
@@ -192,7 +183,6 @@ function loadNextImage() {
 function draw() {
   background("#C3C3C3");
 
-  // start loading AFTER delay
   if (
     millis() - startTime > START_LOADING_AFTER &&
     frameCount % LOAD_INTERVAL === 0
@@ -238,14 +228,13 @@ function draw() {
     scale(scaleFactor);
 
     let isFront = frontIndices.includes(i);
-    p.alpha = lerp(p.alpha, isFront && p.img ? 255 : 0, 0.12);
-    p.bgAlpha = lerp(p.bgAlpha, p.img ? 0 : 255, 0.12);
 
-    // placeholder
-    if (p.bgAlpha > 2) {
-      fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
-      plane(p.w, p.h);
-    }
+    p.alpha   = lerp(p.alpha,   isFront && p.img ? 255 : 0, 0.12);
+    p.bgAlpha = lerp(p.bgAlpha, isFront ? 0 : 255, 0.12);
+
+    // background rectangle – תמיד קיים
+    fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
+    plane(p.w, p.h);
 
     // image
     if (p.img && p.alpha > 2) {
