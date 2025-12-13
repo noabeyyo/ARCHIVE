@@ -74,107 +74,132 @@ let files = [
   "https://static.wixstatic.com/media/517ef0_333feb6b63a241869ffe7fd4ef440350~mv2.jpg"
 ];
 
+
+// ================= GLOBALS =================
 let imgs = [];
 let placed = [];
+
 let angleX = 0;
 let angleY = 0;
 let targetX = 0;
 let targetY = 0;
 
-// זום
+// zoom
 let cameraZ = 0;
 let targetZ = -800;
 let zoomSpeed = 0.15;
 
-// pinch
-let prevDist = 0;
+// loading control
+let loadIndex = 0;
+let INITIAL_LOAD = 12;
+let LOAD_INTERVAL = 10;
 
-// צבעים
+// colors
 let palette = [
   "#A78F06", "#F9A47A",
-  "#BB8CFE", "#FA7800", "#D4AC8E",
-  "#D8F300", "#6BAADF"
+  "#BB8CFE", "#FA7800",
+  "#D4AC8E", "#D8F300",
+  "#6BAADF"
 ];
 
-// קבוצה פרונטלית
+// front group
 let frontIndices = [];
 let frontCount = 25;
 let lastFrontChange = 0;
 let frontChangeInterval = 1000;
 
+// ================= PRELOAD =================
 function preload() {
-  for (let p of files) {
-    loadImage(p, img => imgs.push({ img, name: p }), () => {});
+  for (let i = 0; i < INITIAL_LOAD; i++) {
+    loadNextImage();
   }
 }
 
+// ================= SETUP =================
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   noStroke();
+}
 
+// ================= IMAGE LOADING =================
+function loadNextImage() {
+  if (loadIndex >= files.length) return;
+
+  loadImage(files[loadIndex], img => {
+    imgs.push(img);
+    createPlacedForImage(img);
+    loadIndex++;
+  });
+}
+
+function createPlacedForImage(img) {
   let radius = 2400;
   let minDistance = 650;
-  let attemptsPerPoint = 400;
+  let attempts = 300;
 
-  for (let i = 0; i < imgs.length; i++) {
-    let pos = null;
+  let pos = null;
 
-    for (let a = 0; a < attemptsPerPoint; a++) {
-      let theta = random(TWO_PI);
-      let phi = random(PI);
-      let r = random(radius * 0.35, radius);
+  for (let i = 0; i < attempts; i++) {
+    let theta = random(TWO_PI);
+    let phi = random(PI);
+    let r = random(radius * 0.35, radius);
 
-      let x = r * sin(phi) * cos(theta);
-      let y = r * sin(phi) * sin(theta);
-      let z = r * cos(phi) * 0.65;
+    let x = r * sin(phi) * cos(theta);
+    let y = r * sin(phi) * sin(theta);
+    let z = r * cos(phi) * 0.65;
 
-      let ok = true;
-      for (let p of placed) {
-        if (dist(x, y, z, p.x, p.y, p.z) < minDistance) {
-          ok = false;
-          break;
-        }
-      }
-      if (ok) {
-        pos = createVector(x, y, z);
+    let ok = true;
+    for (let p of placed) {
+      if (dist(x, y, z, p.x, p.y, p.z) < minDistance) {
+        ok = false;
         break;
       }
     }
 
-    if (!pos) {
-      pos = createVector(
-        random(-radius, radius),
-        random(-radius, radius),
-        random(-radius, radius)
-      );
+    if (ok) {
+      pos = createVector(x, y, z);
+      break;
     }
-
-    let w = 220;
-    let aspect = imgs[i].img.width / imgs[i].img.height;
-    let h = w / aspect;
-
-    placed.push({
-      x: pos.x,
-      y: pos.y,
-      z: pos.z,
-      w,
-      h,
-      img: imgs[i].img,
-      color: color(random(palette)),
-      alpha: 0,
-      bgAlpha: 255,
-      phase: random(TWO_PI)
-    });
   }
 
-  while (frontIndices.length < frontCount) {
-    let idx = floor(random(placed.length));
-    if (!frontIndices.includes(idx)) frontIndices.push(idx);
+  if (!pos) {
+    pos = createVector(
+      random(-radius, radius),
+      random(-radius, radius),
+      random(-radius, radius)
+    );
+  }
+
+  let w = 220;
+  let aspect = img.width / img.height;
+  let h = w / aspect;
+
+  placed.push({
+    x: pos.x,
+    y: pos.y,
+    z: pos.z,
+    w,
+    h,
+    img,
+    color: color(random(palette)),
+    alpha: 0,
+    bgAlpha: 255,
+    phase: random(TWO_PI)
+  });
+
+  if (frontIndices.length < frontCount) {
+    frontIndices.push(placed.length - 1);
   }
 }
 
+// ================= DRAW =================
 function draw() {
   background("#C3C3C3");
+
+  // gradual loading
+  if (frameCount % LOAD_INTERVAL === 0) {
+    loadNextImage();
+  }
 
   let speed = 0.025;
   targetX = map(mouseY, 0, height, -0.9, 0.9);
@@ -188,7 +213,7 @@ function draw() {
   rotateX(angleX * speed * 300);
   rotateY(angleY * speed * 300);
 
-  if (millis() - lastFrontChange > frontChangeInterval) {
+  if (millis() - lastFrontChange > frontChangeInterval && placed.length > frontCount) {
     let removeIdx = floor(random(frontIndices.length));
     let newIdx;
     do {
@@ -234,24 +259,9 @@ function draw() {
   }
 }
 
-function touchMoved() {
-  if (touches.length === 2) {
-    let d = dist(touches[0].x, touches[0].y, touches[1].x, touches[1].y);
-    if (prevDist) {
-      targetZ += (prevDist - d) * 0.5;
-      targetZ = constrain(targetZ, -2000, 500);
-    }
-    prevDist = d;
-  }
-  return false;
-}
-
-function touchEnded() {
-  prevDist = 0;
-}
-
-function mouseWheel(event) {
-  targetZ += event.delta * 0.3;
+// ================= INPUT =================
+function mouseWheel(e) {
+  targetZ += e.delta * 0.3;
   targetZ = constrain(targetZ, -2000, 500);
   return false;
 }
