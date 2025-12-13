@@ -1,320 +1,261 @@
-let baseFont;
-let letters = [];
-let smileImg;
-let floorY; 
-let floorTop; 
-let gravity = 0.6;
-let bounce = 0.3;
-let friction = 0.9;
-let hoverColors;
+let files = [
+  "https://static.wixstatic.com/media/517ef0_004a59ae4d0649b0a15a5eb7f5f48f46~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_7b9c1e031f094ce6960a5dc692197f57~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_1098425285ea4162adde434b1b28491e~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_56ce88554eca40a3994efe6a059db4c0~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_b2187c9aa35e470791172e4fc821e5dd~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_68f6f276dd0c4ac087c40269df12ce8e~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_9f81d68f57da40c89052280e41576fad~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_35d4b1942e5c44e591b32e6c6443e13f~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_089d397b190e47e8bcea341b70a71ff6~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_738283faa5ab4d6795b131d23f00bbc0~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_9099b8ed9a46476faf03bb09f9520dd6~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_503e1c45557f447eabcb97304702ad18~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_a9031755bf7c43168f80cb80378809cc~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_85d8a0a9efe0476fb3acb2aa684ebcdc~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_6ae2965fa89f42b9ab4fe8f7f1139211~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_390949b84d9747e0bd4c18197b70f0ee~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_ef820c8b89184fcb916b9e0b88efe30c~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_fa8abd5f11414b4ea58f9abaf84702b0~mv2.jpg",
 
-let trailPoints = [];
-let trailDuration = 1000;
-let maxTrailPoints = 120;
-let brushColor;
-let lastColorChangeTime = 0;
+  "https://static.wixstatic.com/media/517ef0_b1eecc1ecead468d82dd35f4fde2f691~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_fd3e7a8e19b94d159702273b95d6978c~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_39c5d1ecc1cc437e9eee55c1a38b2dc7~mv2.gif",
 
-let floorWidth = 826;
-let floorHeight = 63;
-let floorMargin = 100;
+  "https://static.wixstatic.com/media/517ef0_e6a2155780214c6d9d11aa01c235ccd5~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_cea8668ee8404a32a41c8c3c9ab6345b~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_4eae7175caf942318726eaeb780e01d1~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_985a38c90b584029992f7f1f5806987d~mv2.jpg",
 
-// 🎯 מיקום X ידני לכל אות + סדר z (מי מעל מי)
-// עכשיו אפשר לתת ערכי x חופפים!
-let letterPositions = [
-  { char: "N", x: 0, z: 1 },
-  { char: "O", x: 51, z: 2 },    // צמוד/חופף ל-N
-  { char: "A", x: 100, z: 3 },    // צמוד/חופף ל-O
-  { char: " ", x: 150, z: 0 },   // רווח
-  { char: "B", x: 170, z: 4 },
-  { char: "E", x: 217, z: 5 },
-  { char: "Y", x: 258, z: 6 },
-  { char: "O", x: 300, z: 7 }
+  "https://static.wixstatic.com/media/517ef0_6efb4852598742bd93564f8ec5ddc3e7~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_994f6e6b482242149c6dbc61f3b1c52b~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_e3ee087cb3994c75a5d042d34956df12~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_28bddc36e416488d917bfb6e12fd6dd3~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_daee5f7ebc66487ca59ec830e9945192~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_3cb91107a094452490cd029b7439126a~mv2.gif",
+
+  "https://static.wixstatic.com/media/517ef0_1e6f385beea340b8abc11b2e0ffcaff3~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_f13d78e41353420e8a80b4572a7d71b6~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_ec4c5620345646709f544c829e96283b~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_ac7e3016218746139ac3e4b96ed151e1~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_4e866e2730d64905ab04c4645727c45d~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_efd4110ef61e4df8bf7da2ff5e92d7b3~mv2.gif",
+
+  "https://static.wixstatic.com/media/517ef0_e39b745a58b34d1298d2a3809fe98dd0~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_5bc8bc00277e480da5bf2997384e9ec8~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_f8752a80f94f4393bc34aeb1883d9749~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_5f25e66b661942ca8536230ec1aa4c49~mv2.png",
+
+  "https://static.wixstatic.com/media/517ef0_740dec5eefd5498f84f83e12bd1998fa~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_772fd6ac53934b729b54febf2e98a980~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_e43b6db6aecd4d3cba4dffd6efcd3e4d~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_0925628b65a046c9b8e70d03154d6897~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_eddd0d02c5e04efcb7feb504a0430c13~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_04c344e4315c4fa9b5bee38ca36bbd56~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_bdd597dc0884484ea528e87994df551d~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_eb681ec65bcd4a67aa73baff6351893a~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_cddc4462265a4ec288982b44f073190d~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_142714fe096f49969fa8ef32020d956f~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_8d0994389152441ca650a4101974b396~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_c5f8da97e232479ba299ea31f0cca8cb~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_0cd9cfffaf9c40dd9dcd7059d5c86ebd~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_485e937042da433197a3b0336dd1b38b~mv2.jpg",
+
+  "https://static.wixstatic.com/media/517ef0_0dd88fb4019247d2857222e83f1a2924~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_1060e14628684c4ea11fc9b1d681b09d~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_2be9611830574b069668b28e555e8705~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_fbf5d6d0480a45a1aa47ff4aaef09a14~mv2.gif",
+  "https://static.wixstatic.com/media/517ef0_c24a94d9041f4c29ac04ab18984c4696~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_7dedfbdc6271460ca151d8ed75bc58af~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_1bc29d2226c14810bcf09ecf0ab0d500~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_dc9a2c6d92014d17bba6dc93759adc72~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_b4dfdb8eefe942eaabdba3b0476af0ab~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_5949a043e57940e5bf6f9cb7ac509af5~mv2.jpg",
+  "https://static.wixstatic.com/media/517ef0_333feb6b63a241869ffe7fd4ef440350~mv2.jpg"
 ];
-let smileXOffset = 358;
-let smileZ = 5;
+
+let imgs = [];
+let placed = [];
+let angleX = 0;
+let angleY = 0;
+let targetX = 0;
+let targetY = 0;
+
+// זום
+let cameraZ = 0;
+let targetZ = -800;
+let zoomSpeed = 0.15;
+
+// pinch
+let prevDist = 0;
+
+// צבעים
+let palette = [
+  "#A78F06", "#F9A47A",
+  "#BB8CFE", "#FA7800", "#D4AC8E",
+  "#D8F300", "#6BAADF"
+];
+
+// קבוצה פרונטלית
+let frontIndices = [];
+let frontCount = 25;
+let lastFrontChange = 0;
+let frontChangeInterval = 1000;
 
 function preload() {
-  baseFont = loadFont("NeueMontreal-Bold.otf");
-  smileImg = loadImage("smile.svg");
+  for (let p of files) {
+    loadImage(p, img => imgs.push({ img, name: p }), () => {});
+  }
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  textFont(baseFont);
-  textAlign(LEFT, CENTER);
-  textSize(76);
+  createCanvas(windowWidth, windowHeight, WEBGL);
   noStroke();
 
-  hoverColors = [
-    "#A78F06", "#F9A47A", "#F40101",
-    "#BB8CFE", "#FA7800", "#D4AC8E",
-    "#D8F300", "#6BAADF"
-  ];
+  let radius = 2400;
+  let minDistance = 650;
+  let attemptsPerPoint = 400;
 
-  brushColor = color(random(hoverColors));
-  createLetters();
-}
+  for (let i = 0; i < imgs.length; i++) {
+    let pos = null;
 
-function createLetters() {
-  letters = [];
-  let y = height / 2 - floorMargin;
+    for (let a = 0; a < attemptsPerPoint; a++) {
+      let theta = random(TWO_PI);
+      let phi = random(PI);
+      let r = random(radius * 0.35, radius);
 
-  // חשב רוחב כולל
-  let maxX = 0;
-  for (let pos of letterPositions) {
-    if (pos.char !== " ") {
-      maxX = Math.max(maxX, pos.x + textWidth(pos.char));
+      let x = r * sin(phi) * cos(theta);
+      let y = r * sin(phi) * sin(theta);
+      let z = r * cos(phi) * 0.65;
+
+      let ok = true;
+      for (let p of placed) {
+        if (dist(x, y, z, p.x, p.y, p.z) < minDistance) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) {
+        pos = createVector(x, y, z);
+        break;
+      }
     }
+
+    if (!pos) {
+      pos = createVector(
+        random(-radius, radius),
+        random(-radius, radius),
+        random(-radius, radius)
+      );
+    }
+
+    let w = 220;
+    let aspect = imgs[i].img.width / imgs[i].img.height;
+    let h = w / aspect;
+
+    placed.push({
+      x: pos.x,
+      y: pos.y,
+      z: pos.z,
+      w,
+      h,
+      img: imgs[i].img,
+      color: color(random(palette)),
+      alpha: 0,
+      bgAlpha: 255,
+      phase: random(TWO_PI)
+    });
   }
-  maxX = Math.max(maxX, smileXOffset + 48);
 
-  let centerOffset = width / 2 - maxX / 2;
-
-  // צור אותיות עם z-index
-  for (let pos of letterPositions) {
-    if (pos.char === " ") continue;
-    let letter = new PhysicsLetter(pos.char, centerOffset + pos.x, y);
-    letter.zIndex = pos.z;
-    letters.push(letter);
+  while (frontIndices.length < frontCount) {
+    let idx = floor(random(placed.length));
+    if (!frontIndices.includes(idx)) frontIndices.push(idx);
   }
-
-  // הוסף סמיילי
-  let smile = new HoverImage(smileImg, centerOffset + smileXOffset, y + 2, 44);
-  smile.zIndex = smileZ;
-  letters.push(smile);
-
-  floorY = height / 2 + floorMargin;
-  floorTop = floorY - floorHeight;
 }
 
 function draw() {
   background("#C3C3C3");
 
-  noFill();
-  noStroke();
-  rectMode(CENTER);
-  rect(width / 2, floorTop + floorHeight / 2, floorWidth, floorHeight);
+  let speed = 0.025;
+  targetX = map(mouseY, 0, height, -0.9, 0.9);
+  targetY = map(mouseX, 0, width, -0.9, 0.9);
+  angleX = lerp(angleX, targetX, 0.08);
+  angleY = lerp(angleY, targetY, 0.08);
 
-  // עדכון כל האובייקטים
-  for (let l of letters) {
-    if (l.update) l.update();
+  cameraZ = lerp(cameraZ, targetZ, zoomSpeed);
+  translate(0, 0, cameraZ);
+
+  rotateX(angleX * speed * 300);
+  rotateY(angleY * speed * 300);
+
+  if (millis() - lastFrontChange > frontChangeInterval) {
+    let removeIdx = floor(random(frontIndices.length));
+    let newIdx;
+    do {
+      newIdx = floor(random(placed.length));
+    } while (frontIndices.includes(newIdx));
+    frontIndices[removeIdx] = newIdx;
+    lastFrontChange = millis();
   }
 
-  // 🔥 התנגשויות רק בין אותיות שנפלו (active=true)
-  for (let i = 0; i < letters.length; i++) {
-    let l1 = letters[i];
-    if (!(l1 instanceof PhysicsLetter)) continue;
-    if (!l1.active) continue; // דלג על אותיות סטטיות!
-    
-    for (let j = i + 1; j < letters.length; j++) {
-      let l2 = letters[j];
-      if (!(l2 instanceof PhysicsLetter)) continue;
-      if (!l2.active) continue; // דלג על אותיות סטטיות!
-      
-      handleCollision(l1, l2);
-    }
-  }
+  placed.sort((a, b) => a.z - b.z);
 
-  // מיון לפי z-index ואז ציור
-  let sortedLetters = [...letters].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
-  for (let l of sortedLetters) {
-    if (l.display) l.display();
-  }
-
-  if (millis() - lastColorChangeTime > 5000) {
-    brushColor = color(random(hoverColors));
-    lastColorChangeTime = millis();
-  }
-
-  updateTrail();
-  drawTrail();
-}
-
-class PhysicsLetter {
-  constructor(char, x, y) {
-    this.char = char;
-    this.x = x;
-    this.y = y;
-    this.origX = x;
-    this.origY = y;
-    this.w = textWidth(char);
-    this.h = 76;
-    this.vx = 0;
-    this.vy = 0;
-    this.active = false; // מתחיל כסטטי
-    this.angle = 0;
-    this.angularVelocity = 0;
-    this.zIndex = 0;
-
-    this.currentColor = color(0);
-    this.targetColor = color(0);
-    this.hovering = false;
-    this.lastHoverTime = 0;
-  }
-
-  update() {
-    let cx = this.x + this.w / 2;
-    let cy = this.y;
-    let d = dist(mouseX, mouseY, cx, cy);
-    let isNowHover = d < 100;
-
-    if (isNowHover && !this.hovering) {
-      this.targetColor = color(random(hoverColors));
-      this.lastHoverTime = millis();
-      this.hovering = true;
-      if (!this.active) this.triggerFall();
-    }
-
-    if (!isNowHover && this.hovering) {
-      this.hovering = false;
-      this.lastHoverTime = millis();
-    }
-
-    if (this.hovering) {
-      this.currentColor = this.targetColor;
-    } else {
-      if (millis() - this.lastHoverTime > 500) {
-        this.currentColor = lerpColor(this.currentColor, color(0), 0.1);
-      } else {
-        this.currentColor = this.targetColor;
-      }
-    }
-
-    // פיזיקה רק כשנפלה
-    if (this.active) {
-      this.vy += gravity;
-      this.x += this.vx;
-      this.y += this.vy;
-      this.vx *= friction;
-      this.vy *= friction;
-      this.angle += this.angularVelocity;
-
-      let left = width / 2 - floorWidth / 2;
-      let right = width / 2 + floorWidth / 2;
-      if (this.x + this.w / 2 > left && this.x - this.w / 2 < right) {
-        if (this.y + this.h / 2 >= floorTop + floorHeight) {
-          this.y = floorTop + floorHeight - this.h / 2;
-          this.vy *= -bounce;
-          this.angularVelocity *= -bounce;
-          this.resetLetter();
-        }
-      }
-
-      if (this.x < 0) { this.x = 0; this.vx *= -bounce; }
-      if (this.x + this.w > width) { this.x = width - this.w; this.vx *= -bounce; }
-      if (this.y + this.h / 2 > height) { this.y = height - this.h / 2; this.vy *= -bounce; }
-
-      let md = dist(mouseX, mouseY, this.x + this.w/2, this.y);
-      if (md < 100) {
-        let angle = atan2(this.y - mouseY, this.x + this.w/2 - mouseX);
-        let force = map(md, 0, 100, 5, 0);
-        this.vx += cos(angle) * force;
-        this.vy += sin(angle) * force;
-        this.angularVelocity += random(-0.05, 0.05);
-      }
-    }
-  }
-
-  display() {
+  for (let i = 0; i < placed.length; i++) {
+    let p = placed[i];
     push();
-    translate(this.x + this.w / 2, this.y);
-    rotate(this.angle);
-    fill(this.currentColor);
-    textSize(this.h);
-    text(this.char, -this.w / 2, 0);
+
+    let breath = sin(frameCount * 0.02 + p.phase) * 20;
+    translate(p.x, p.y, p.z + breath);
+
+    rotateY(-angleY * speed * 300);
+    rotateX(-angleX * speed * 300);
+
+    let scaleFactor = map(p.z, -2500, 2500, 0.4, 1.45);
+    scale(scaleFactor);
+
+    let isFront = frontIndices.includes(i);
+    p.alpha = lerp(p.alpha, isFront ? 255 : 0, 0.12);
+    p.bgAlpha = lerp(p.bgAlpha, isFront ? 0 : 255, 0.12);
+
+    push();
+    fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
+    plane(p.w, p.h);
+    pop();
+
+    if (p.alpha > 2) {
+      push();
+      tint(255, p.alpha);
+      texture(p.img);
+      plane(p.w, p.h);
+      pop();
+    }
+
     pop();
   }
-
-  triggerFall() {
-    this.active = true;
-    this.vx = random(-2, 2);
-    this.vy = random(-5, -2);
-    this.angularVelocity = random(-0.05, 0.05);
-  }
-
-  resetLetter() {
-    this.x = this.origX;
-    this.y = this.origY;
-    this.vx = 0;
-    this.vy = 0;
-    this.angle = 0;
-    this.angularVelocity = 0;
-    this.active = false;
-    this.currentColor = color(0);
-  }
 }
 
-function handleCollision(a, b) {
-  let dx = (a.x + a.w/2) - (b.x + b.w/2);
-  let dy = (a.y + a.h/2) - (b.y + b.h/2);
-  let overlapX = (a.w + b.w)/2 - abs(dx);
-  let overlapY = (a.h + b.h)/2 - abs(dy);
-
-  if (overlapX > 0 && overlapY > 0) {
-    if (overlapX < overlapY) {
-      let shift = overlapX / 2;
-      if (dx > 0) { a.x += shift; b.x -= shift; }
-      else { a.x -= shift; b.x += shift; }
-      let temp = a.vx;
-      a.vx = b.vx * 0.8;
-      b.vx = temp * 0.8;
-    } else {
-      let shift = overlapY / 2;
-      if (dy > 0) { a.y += shift; b.y -= shift; }
-      else { a.y -= shift; b.y += shift; }
-      let temp = a.vy;
-      a.vy = b.vy * 0.8;
-      b.vy = temp * 0.8;
+function touchMoved() {
+  if (touches.length === 2) {
+    let d = dist(touches[0].x, touches[0].y, touches[1].x, touches[1].y);
+    if (prevDist) {
+      targetZ += (prevDist - d) * 0.5;
+      targetZ = constrain(targetZ, -2000, 500);
     }
+    prevDist = d;
   }
+  return false;
 }
 
-class HoverImage {
-  constructor(img, x, y, size) {
-    this.img = img;
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.zIndex = 0;
-  }
-  update() {}
-  display() {
-    imageMode(CENTER);
-    image(this.img, this.x + this.size / 2, this.y, this.size, this.size);
-  }
+function touchEnded() {
+  prevDist = 0;
 }
 
-function mouseMoved() {
-  trailPoints.push({
-    x: mouseX,
-    y: mouseY,
-    born: millis(),
-    col: brushColor
-  });
-  if (trailPoints.length > maxTrailPoints) trailPoints.shift();
-}
-
-function updateTrail() {
-  for (let p of trailPoints) p.y += 1.2;
-  let now = millis();
-  trailPoints = trailPoints.filter(p => now - p.born < trailDuration);
-}
-
-function drawTrail() {
-  if (trailPoints.length < 2) return;
-  noFill();
-  beginShape();
-  for (let p of trailPoints) {
-    let age = millis() - p.born;
-    let alpha = map(age, 0, trailDuration, 255, 0);
-    stroke(red(p.col), green(p.col), blue(p.col), alpha);
-    strokeWeight(4);
-    curveVertex(p.x, p.y);
-  }
-  endShape();
+function mouseWheel(event) {
+  targetZ += event.delta * 0.3;
+  targetZ = constrain(targetZ, -2000, 500);
+  return false;
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  createLetters();
 }
