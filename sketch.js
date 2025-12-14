@@ -96,12 +96,6 @@ let LOAD_INTERVAL = 8;
 let START_LOADING_AFTER = 5000;
 let startTime;
 
-// front group
-let frontIndices = [];
-let frontCount = 25;
-let lastFrontChange = 0;
-let frontChangeInterval = 1000;
-
 // ================= SETUP =================
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
@@ -143,7 +137,7 @@ function createPlaceholder() {
   }
 
   let w = 220;
-  let h = 220; // זמני – יתעדכן כשהתמונה תיטען
+  let h = 220;
 
   placed.push({
     x: pos.x,
@@ -152,15 +146,12 @@ function createPlaceholder() {
     w,
     h,
     img: null,
+    loaded: false,
     color: color(random(palette)),
-    alpha: 0,
+    imgAlpha: 0,
     bgAlpha: 255,
     phase: random(TWO_PI)
   });
-
-  if (frontIndices.length < frontCount) {
-    frontIndices.push(placed.length - 1);
-  }
 }
 
 // ================= IMAGE LOADING =================
@@ -173,6 +164,7 @@ function loadNextImage() {
   loadImage(files[i], img => {
     let p = placed[i];
     p.img = img;
+    p.loaded = true;
 
     let aspect = img.width / img.height;
     p.h = p.w / aspect;
@@ -202,20 +194,9 @@ function draw() {
   rotateX(angleX * speed * 300);
   rotateY(angleY * speed * 300);
 
-  if (millis() - lastFrontChange > frontChangeInterval) {
-    let removeIdx = floor(random(frontIndices.length));
-    let newIdx;
-    do {
-      newIdx = floor(random(placed.length));
-    } while (frontIndices.includes(newIdx));
-    frontIndices[removeIdx] = newIdx;
-    lastFrontChange = millis();
-  }
-
   placed.sort((a, b) => a.z - b.z);
 
-  for (let i = 0; i < placed.length; i++) {
-    let p = placed[i];
+  for (let p of placed) {
     push();
 
     let breath = sin(frameCount * 0.02 + p.phase) * 20;
@@ -227,18 +208,22 @@ function draw() {
     let scaleFactor = map(p.z, -2500, 2500, 0.4, 1.45);
     scale(scaleFactor);
 
-    let isFront = frontIndices.includes(i);
+    // fade logic
+    let targetImgAlpha = p.loaded ? 255 : 0;
+    let targetBgAlpha  = p.loaded ? 0   : 255;
 
-    p.alpha   = lerp(p.alpha,   isFront && p.img ? 255 : 0, 0.12);
-    p.bgAlpha = lerp(p.bgAlpha, isFront ? 0 : 255, 0.12);
+    p.imgAlpha = lerp(p.imgAlpha, targetImgAlpha, 0.08);
+    p.bgAlpha  = lerp(p.bgAlpha,  targetBgAlpha,  0.08);
 
-    // background rectangle – תמיד קיים
-    fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
-    plane(p.w, p.h);
+    // placeholder
+    if (p.bgAlpha > 1) {
+      fill(red(p.color), green(p.color), blue(p.color), p.bgAlpha);
+      plane(p.w, p.h);
+    }
 
     // image
-    if (p.img && p.alpha > 2) {
-      tint(255, p.alpha);
+    if (p.img && p.imgAlpha > 1) {
+      tint(255, p.imgAlpha);
       texture(p.img);
       plane(p.w, p.h);
     }
